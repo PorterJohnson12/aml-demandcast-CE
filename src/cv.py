@@ -80,6 +80,7 @@ def time_series_cv(
                 "mae":  round(mean_absolute_error(y_fold_test, preds), 4),
                 "rmse": round(root_mean_squared_error(y_fold_test, preds), 4),
                 "r2":   round(r2_score(y_fold_test, preds), 4),
+                "mbe":  round(float(np.mean(preds - y_fold_test)), 4),
             }
             results.append(fold_metrics)
 
@@ -88,10 +89,11 @@ def time_series_cv(
                 "mae": fold_metrics["mae"],
                 "rmse": fold_metrics["rmse"],
                 "r2": fold_metrics["r2"],
+                "mbe": fold_metrics["mbe"],
             }, step=fold)
 
             print(f"  Fold {fold}: MAE={fold_metrics['mae']:.2f}  "
-                  f"RMSE={fold_metrics['rmse']:.2f}  R²={fold_metrics['r2']:.3f}")
+                  f"RMSE={fold_metrics['rmse']:.2f}  R²={fold_metrics['r2']:.3f}  MBE={fold_metrics['mbe']:.2f}")
 
         # --- 4. Log summary metrics and return results ---
         results_df = pd.DataFrame(results)
@@ -100,6 +102,7 @@ def time_series_cv(
             "cv_mae_std":  round(results_df["mae"].std(), 4),
             "cv_rmse_mean": round(results_df["rmse"].mean(), 4),
             "cv_r2_mean":  round(results_df["r2"].mean(), 4),
+            "cv_mbe_mean": round(results_df["mbe"].mean(), 4),
         })
         
         return results_df
@@ -142,7 +145,8 @@ if __name__ == "__main__":
     
     print(f"  Baseline MAE:  {mean_absolute_error(y_val_base, baseline_preds):.2f}")
     print(f"  Baseline RMSE: {root_mean_squared_error(y_val_base, baseline_preds):.2f}")
-    print(f"  Baseline R²:   {r2_score(y_val_base, baseline_preds):.3f}\n")
+    print(f"  Baseline R²:   {r2_score(y_val_base, baseline_preds):.3f}")
+    print(f"  Baseline MBE:  {np.mean(baseline_preds - y_val_base):.2f}\n")
     # -----------------------------------------------------------------------
     
     results_df = time_series_cv(
@@ -156,8 +160,12 @@ if __name__ == "__main__":
     mean_mae = results_df['mae'].mean()
     std_mae = results_df['mae'].std()
     
+    mean_mbe = results_df['mbe'].mean()
+    std_mbe = results_df['mbe'].std()
+    
     print("\n==================================")
     print(f"CV MAE: {mean_mae:.2f} ± {std_mae:.2f}")
+    print(f"CV MBE: {mean_mbe:.2f} ± {std_mbe:.2f}")
     print("==================================")
     print("Done! You can verify the run in MLflow at http://localhost:5000")
 
